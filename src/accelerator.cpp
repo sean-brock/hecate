@@ -1,40 +1,24 @@
 #include "hecate/accelerator.hpp"
+
 #include <loguru.hpp>
+#include <string>
+using namespace hecate;
 
-void *hecate::Accelerator::allocate(std::size_t n) {
-  try {
-
-    void *mem = allocate_impl(n);
-    auto result = _allocated.insert(mem);
-    if (!results.second) {
-      cosnt std::string *msg = "Allocator returned duplicate address.";
-      LOG_F(ERROR, msg)
-      throw std::runtime_error(msg);
-    }
-  } catch (const std::exception &e) {
-    LOG_F(ERROR, "Failed to allocate.")
-    throw e;
-  }
+void *Accelerator::allocate(std::size_t n) {
+  void *mem = allocate_impl(n);
+  auto result = _allocated.insert(mem);
+  CHECK_F(result.second, "Allocator returned duplicate address.");
+  return mem;
 }
 
-void hecate::Accelerator::free(const void *mem) {
+void Accelerator::free(void *mem) noexcept {
   auto found = _allocated.find(mem);
-  if (found == _allocated.cend()) {
-    const std::string *msg = "Attempted to free unallocated address.";
-    LOG_F(ERROR, msg);
-    throw std::runtime_error(msg);
-  }
-
+  CHECK_F(found != _allocated.cend(), "Attempted to free unallocated address.");
+  free_impl(mem);
   _allocated.erase(found);
 }
 
-hecate::Accelerator::~Accelerator() {
-  try {
-    for (void *mem : _allocated) {
-      free_impl(mem);
-    }
-  } catch (const std::exception &e) {
-    LOG_F("Failed to free remaining Accelerator memory.")
-    throw e;
-  }
+Accelerator::~Accelerator() {
+  LOG_IF_F(WARNING, _allocated.size() > 0,
+           "Accelerator memory not-empty. Possible memory leak.");
 }

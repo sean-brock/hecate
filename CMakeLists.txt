@@ -49,6 +49,7 @@ FetchContent_Declare(LoguruGitRepo
 # set any loguru compile-time flags before calling MakeAvailable()
 # set(LOGURU_WITH_STREAMS TRUE)
 FetchContent_MakeAvailable(LoguruGitRepo) # defines target 'loguru::loguru'
+set_property(TARGET loguru PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 FetchContent_Declare(HipCpu
 	GIT_REPOSITORY "https://github.com/ROCm-Developer-Tools/HIP-CPU"
